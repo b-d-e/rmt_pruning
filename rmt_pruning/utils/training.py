@@ -4,7 +4,7 @@ import wandb
 
 def train_epoch(model, device, train_loader, optimizer, epoch, config, log_to_wandb=True):
     model.train()
-    model.to(device)
+    # model.to(device)
 
     l1_lambda = 0.000005
     l2_lambda = 0.000005
@@ -13,7 +13,7 @@ def train_epoch(model, device, train_loader, optimizer, epoch, config, log_to_wa
     total_loss = 0
 
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
+        # data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
 
         output = model(data)
@@ -58,7 +58,7 @@ def test_epoch(model, device, test_loader, epoch, log_to_wandb=True):
 
     with torch.no_grad():
         for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
+            # data, target = data.to(device), target.to(device)
             output = model(data)
             test_loss += F.nll_loss(output, target, reduction='sum').item()
             pred = output.argmax(dim=1, keepdim=True)

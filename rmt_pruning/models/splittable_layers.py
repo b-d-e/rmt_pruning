@@ -130,7 +130,7 @@ class SplittableLinear(nn.Module):
 
         return np.sqrt(n * lambda_plus), good_fit
 
-    def split(self, ratio, save_name, show=False):
+    def split(self, ratio, save_name):
         matrix = self.get_matrix()
         U, S, V = np.linalg.svd(matrix)
         Splus, good_fit = self.fit_mp(U, S, V, save_name)
@@ -145,20 +145,32 @@ class SplittableLinear(nn.Module):
             if not self.splitted:
                 new_weights = (U[:, :inner_dim] * S[None, :inner_dim]) @ V[:inner_dim, :]
                 self.set_params("layer1", torch.from_numpy(new_weights).float(),
-                              bias=None, change_bias=False)
+                            bias=None, change_bias=False)
             return f" {self.name} not enough param reduc"
 
         new_weights1 = np.sqrt(S)[:inner_dim, None] * V[:inner_dim, :]
         new_weights2 = U[:, :inner_dim] * np.sqrt(S)[None, :inner_dim]
 
         try:
-            bias = nn.Parameter(self.layer1.bias.clone())
+            bias = nn.Parameter(self.layer1.bias.clone()) if self.layer1.bias is not None else None
         except AttributeError:
             bias = None
 
-        self.layer1, self.layer2 = self._make_splitted_layers(inner_dim)
-        self.set_params("layer1", torch.from_numpy(new_weights1).float(), bias=None)
-        self.set_params("layer2", torch.from_numpy(new_weights2).float(), bias)
+        # Get current device
+        device = self.layer1.weight.device
+
+        # Create new layers and immediately move them to the correct device
+        layer1, layer2 = self._make_splitted_layers(inner_dim)
+        self.layer1 = layer1.to(device)
+        self.layer2 = layer2.to(device)
+
+        # Convert numpy arrays to tensors and set parameters
+        weights1 = torch.from_numpy(new_weights1).float()
+        weights2 = torch.from_numpy(new_weights2).float()
+
+        self.set_params("layer1", weights1, None)
+        self.set_params("layer2", weights2, bias)
+
         self.splitted = True
 
         return f" {self.name} splitted, new dims {(self.in_features, inner_dim, self.out_features)}"
@@ -170,12 +182,19 @@ class SplittableLinear(nn.Module):
 
     def set_params(self, which_layer, weight, bias, change_bias=True):
         assert which_layer in ["layer1", "layer2"]
-        getattr(self, which_layer).weight = nn.Parameter(weight)
+        layer = getattr(self, which_layer)
+
+        # Move new weights to the same device as the layer
+        device = layer.weight.device
+        weight = weight.to(device)
+
+        layer.weight = nn.Parameter(weight)
         if change_bias:
-            if bias is None:
-                getattr(self, which_layer).bias = None
+            if bias is not None:
+                bias = bias.to(device)  # Move bias to same device
+                layer.bias = nn.Parameter(bias)
             else:
-                getattr(self, which_layer).bias = nn.Parameter(bias)
+                layer.bias = None
 
     def _compute_error(self, eigenvals, gamma):
         # Implement error computation using L-infinity norm between theoretical CDF and empirical CDF

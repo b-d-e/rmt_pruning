@@ -12,16 +12,11 @@ def get_data_loaders(batch_size, seed):
         transforms.Normalize((0.5,), (0.5,))
     ])
 
-    # Set up CUDA if available
-    use_cuda = torch.cuda.is_available()
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-
     # Load training data
     train_loader = DataLoader(
         datasets.FashionMNIST('./data', train=True, download=True, transform=transform),
         batch_size=batch_size,
         shuffle=True,
-        **kwargs
     )
 
     # Load test data
@@ -29,7 +24,6 @@ def get_data_loaders(batch_size, seed):
         datasets.FashionMNIST('./data', train=False, transform=transform),
         batch_size=batch_size,
         shuffle=True,
-        **kwargs
     )
 
     return train_loader, test_loader

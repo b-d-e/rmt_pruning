@@ -107,7 +107,7 @@ class NetworkModule(pl.LightningModule):
             result = layer.split(
                 bema_scheduler(self.current_epoch),
                 save_name=f'layer_{i}_epoch_{self.current_epoch}',
-                show=False
+                # show=False
             )
 
             # Log pruning metrics
