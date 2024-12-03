@@ -1,5 +1,6 @@
 checkpoints/*
 data/
+!rmt_pruning/data/
 logs
 wandb
 

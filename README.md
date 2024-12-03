@@ -11,7 +11,7 @@ I take no credit for the original work and this is currently a simple re-factor 
 
 Install packages with `pip install -e .` and your favourite environment manager.
 
-If desired, modify the PyTorch Lightning configuration in `config/default.yaml` - in particular though, make sure to set a correct weights and biases entity (user/team) name.
+If desired, modify the PyTorch Lightning configuration in `config/default.yaml` - though you can leave it as is  for a working setup.
 If you haven't used wandb before, run `wandb login` and follow instructions to update your `.netrc` with an access token.
 
 Run `python train.py fit --config config/default.yaml` to execute the training process.
