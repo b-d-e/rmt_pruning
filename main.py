@@ -1,4 +1,5 @@
 import torch
+import os
 import yaml
 import wandb
 from pathlib import Path
@@ -22,7 +23,11 @@ def main():
     )
 
     # Set device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    # create checkpoints folder if it does not exist
+    if not os.path.exists("checkpoints/"):
+        os.makedirs("checkpoints/")
 
     # Get data loaders
     train_loader, test_loader = get_data_loaders(
