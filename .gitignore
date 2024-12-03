@@ -1,0 +1,6 @@
+checkpoints/*
+data
+
+wandb
+
+.DS_Store

@@ -1,0 +1,27 @@
+training:
+  epochs: 1000
+  learning_rate: 0.02
+  momentum: 0.9
+  batch_size: 128
+  split_frequency: 1
+  show_training_loss: false
+  show_spectrum_during_split: false
+  log_interval: 50  # Added this line
+  checkpoint_frequency: 10
+
+network:
+  dims: [784, 3000, 3000, 3000, 10]  # 28*28 = 784
+  use_relu: [false, false, false, true, true]
+  goodness_of_fit_cutoff: [1]
+
+pruning:
+  alpha: 0.25
+  beta: 0.9
+
+wandb:
+  project: "random_matrix_pruning"
+  entity: "b-d-e"
+  tags: ["pruning", "bema"]
+
+seed: 4435912
+save_dir: "checkpoints"
