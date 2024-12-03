@@ -15,3 +15,4 @@ If desired, modify the PyTorch Lightning configuration in `config/config.yaml` -
 If you haven't used wandb before, run `wandb login` and follow instructions to update your `.netrc` with an access token.
 
 Run `python train.py fit --config config/config.yaml` to execute the training process.
+
