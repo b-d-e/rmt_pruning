@@ -5,7 +5,7 @@ from .splittable_layers import SplittableLinear
 
 class NetworkModel(nn.Module):
     def __init__(self, without_rel, dims, alpha, beta, goodness_of_fit_cutoff):
-        super(NetworkModel, self).__init__()
+        super().__init__()
         self.without_rel = without_rel
         self.dims = dims
         self.fc = nn.ModuleList()
@@ -24,12 +24,11 @@ class NetworkModel(nn.Module):
             current_dim = dims[i]
 
     def forward(self, x):
-        x = torch.flatten(x, start_dim=2)
+        x = torch.flatten(x, start_dim=1)  # Modified to handle MNIST data properly
         for j, layer in enumerate(self.fc):
             x = layer(x)
             if not self.without_rel[j]:
                 x = F.relu(x)
-        x = torch.flatten(x, start_dim=1)
         x = F.log_softmax(x, dim=1)
         return x
 

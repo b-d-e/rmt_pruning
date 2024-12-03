@@ -1,27 +1,51 @@
-training:
-  epochs: 1000
-  learning_rate: 0.02
-  momentum: 0.9
-  batch_size: 128
-  split_frequency: 1
-  show_training_loss: false
-  show_spectrum_during_split: false
-  log_interval: 50  # Added this line
-  checkpoint_frequency: 10
+seed_everything: 42
 
-network:
-  dims: [784, 3000, 3000, 3000, 10]  # 28*28 = 784
-  use_relu: [false, false, false, true, true]
-  goodness_of_fit_cutoff: [1]
+data:
+  class_path: rmt_pruning.data.datamodule.FashionMNISTDataModule
+  init_args:
+    data_dir: "data"
+    batch_size: 128
+    num_workers: 4
 
-pruning:
-  alpha: 0.25
-  beta: 0.9
+model:
+  class_path: rmt_pruning.models.network_module.NetworkModule
+  init_args:
+    dims: [784, 3000, 3000, 3000, 10]
+    use_relu: [false, false, false, true, true]
+    learning_rate: 0.02
+    momentum: 0.9
+    alpha: 0.25
+    beta: 0.9
+    goodness_of_fit_cutoff: [1.0]
+    l1_lambda: 0.000005
+    l2_lambda: 0.000005
+    split_frequency: 1
+    pruning_enabled: true
 
-wandb:
-  project: "random_matrix_pruning"
-  entity: "b-d-e"
-  tags: ["pruning", "bema"]
+trainer:
+  max_epochs: 1000
+  accelerator: "auto"
+  devices: 1
+  deterministic: true
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+      init_args:
+        save_top_k: 3
+        monitor: "val_loss"
+        mode: "min"
+        filename: "epoch_{epoch:03d}-val_loss_{val_loss:.4f}"
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: "epoch"
+    - class_path: pytorch_lightning.callbacks.EarlyStopping
+      init_args:
+        monitor: "val_loss"
+        patience: 10
+        mode: "min"
 
-seed: 4435912
-save_dir: "checkpoints"
+  logger:
+    class_path: pytorch_lightning.loggers.WandbLogger
+    init_args:
+      project: "neural_network_pruning"
+      log_model: true
+      save_dir: "logs"

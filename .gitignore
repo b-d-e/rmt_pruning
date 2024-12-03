@@ -1,9 +1,13 @@
 checkpoints/*
-data
-
+data/
+logs
 wandb
 
 .DS_Store
+
+*.pyc
+*.pt
+*.ckpt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
