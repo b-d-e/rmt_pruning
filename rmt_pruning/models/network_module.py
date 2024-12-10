@@ -20,7 +20,8 @@ class NetworkModule(pl.LightningModule):
         l1_lambda: float = 0.000005,
         l2_lambda: float = 0.000005,
         split_frequency: int = 1,
-        pruning_enabled: bool = True
+        pruning_enabled: bool = True,
+        show_eignspectra: bool = False
     ):
         super().__init__()
         self.save_hyperparameters()
@@ -88,6 +89,8 @@ class NetworkModule(pl.LightningModule):
         self.log('val_loss', loss)
         self.log('val_acc', acc)
 
+        # print(f'Validation loss: {loss}, Validation accuracy: {acc}')
+
         return loss
 
     def on_train_epoch_end(self):
@@ -101,13 +104,13 @@ class NetworkModule(pl.LightningModule):
                 self.model.get_layer_matrix(i),
                 self.model.dims,
                 self.current_epoch,
-                self.hparams.goodness_of_fit_cutoff
+                self.hparams.goodness_of_fit_cutoff,
+                self.hparams.show_eignspectra
             )
 
             result = layer.split(
                 bema_scheduler(self.current_epoch),
                 save_name=f'layer_{i}_epoch_{self.current_epoch}',
-                # show=False
             )
 
             # Log pruning metrics

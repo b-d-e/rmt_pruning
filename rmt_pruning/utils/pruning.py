@@ -1,3 +1,5 @@
+from .visualisation import plot_spectra
+
 import torch
 import numpy as np
 from scipy.integrate import quad
@@ -62,21 +64,7 @@ def error(singular_values, alpha, pTilde, gamma, sigma_sq, show=False):
 
     return np.linalg.norm(difference, np.inf)
 
-def mp_density_wrapper(gamma, sigma_sq, sample_points):
-    """Compute MP density at sample points"""
-    lp = sigma_sq*np.power(1+np.sqrt(gamma), 2)
-    lm = sigma_sq*np.power(1-np.sqrt(gamma), 2)
 
-    return np.array([
-        mp_density_inner(gamma, sigma_sq, x) if lm <= x <= lp else 0
-        for x in sample_points
-    ])
-
-def mp_density_inner(gamma, sigma_sq, x):
-    """Helper function to compute MP density at a point"""
-    lp = sigma_sq*np.power(1+np.sqrt(gamma), 2)
-    lm = sigma_sq*np.power(1-np.sqrt(gamma), 2)
-    return np.sqrt((lp-x)*(x-lm))/(gamma*x*2*np.pi*sigma_sq)
 
 def mp_cdf(gamma, sigma_sq, sample_points):
     """Compute MP CDF at sample points"""
@@ -140,7 +128,7 @@ def bema_inside(pdim, ndf, eigs, alpha, beta):
 
     return sigma_sq, lamda_plus, l2
 
-def bema_mat_wrapper(matrix, pReal, nReal, alpha, beta, goodnessOfFitCutoff, show=False):
+def bema_mat_wrapper(matrix, pReal, nReal, alpha, beta, goodnessOfFitCutoff, show):
     """Wrapper function for BEMA algorithm"""
     # Handle matrix transposition if necessary for eigenvalue computation
     if pReal <= nReal:
@@ -163,39 +151,12 @@ def bema_mat_wrapper(matrix, pReal, nReal, alpha, beta, goodnessOfFitCutoff, sho
     goodFit = LinfError < goodnessOfFitCutoff
 
     if show:
-        visualize_spectrum(v, lamda_plus, gamma, sigma_sq, pTilde)
+        plot_spectra(v, lamda_plus, gamma, sigma_sq, pTilde)
 
     return v, p/n, sigma_sq, lamda_plus, goodFit
 
-def visualize_spectrum(v, lamda_plus, gamma, sigma_sq, pTilde):
-    """Visualize eigenvalue spectrum and MP distribution"""
-    plt.figure(figsize=(15, 5))
 
-    # Full spectrum plot
-    plt.subplot(1, 2, 1)
-    plt.hist(v[-pTilde:], bins=100, color="black",
-            label="Empirical Density", density=True)
-    plt.axvline(x=lamda_plus, label="Lambda Plus", color="red")
-    plt.legend()
-    plt.title("Empirical Distribution Density")
-
-    # Truncated spectrum plot
-    plt.subplot(1, 2, 2)
-    eigsTruncated = [i for i in v[-pTilde:] if i < lamda_plus]
-    plt.hist(eigsTruncated, bins=100, color="black",
-            label="Truncated Empirical Density", density=True)
-
-    # Add theoretical density
-    Z = np.linspace(min(eigsTruncated), max(eigsTruncated), 100)
-    Y = mp_density_wrapper(gamma, sigma_sq, Z)
-    plt.plot(Z, Y, color="orange", label="Predicted Density")
-    plt.legend()
-    plt.title("Density Comparison Zoomed")
-
-    plt.tight_layout()
-    plt.show()
-
-def compute_eigs_to_keep(model, layer_matrix, dims, epoch, goodness_of_fit_cutoff, show=False):
+def compute_eigs_to_keep(model, layer_matrix, dims, epoch, goodness_of_fit_cutoff, show):
     """Compute number of eigenvalues to keep based on BEMA algorithm"""
     p, n = layer_matrix.shape
 

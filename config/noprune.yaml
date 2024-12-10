@@ -4,7 +4,7 @@ data:
   class_path: rmt_pruning.data.datamodule.FashionMNISTDataModule
   init_args:
     data_dir: "data"
-    batch_size: 128
+    batch_size: 256
     num_workers: 4
 
 model:
@@ -20,13 +20,13 @@ model:
     l1_lambda: 0.000005
     l2_lambda: 0.000005
     split_frequency: 1
-    pruning_enabled: true
+    pruning_enabled: false
     show_eignspectra: true
 
 trainer:
-  max_epochs: 1000
+  max_epochs: 100
   accelerator: "auto"
-  devices: 1
+  devices: -1
   deterministic: true
   callbacks:
     - class_path: pytorch_lightning.callbacks.ModelCheckpoint

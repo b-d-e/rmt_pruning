@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import wandb
+from .visualisation import plot_accuracy_vs_parameters
 
 def train_epoch(model, device, train_loader, optimizer, epoch, config, log_to_wandb=True):
     model.train()
@@ -51,10 +52,14 @@ def train_epoch(model, device, train_loader, optimizer, epoch, config, log_to_wa
 
     return accuracy, avg_loss
 
-def test_epoch(model, device, test_loader, epoch, log_to_wandb=True):
+def test_epoch(model, device, test_loader, epoch, log_to_wandb=True, plot_acc=True): # need to pass plot_acc from config
     model.eval()
     test_loss = 0
     correct = 0
+
+    # Count parameters
+    num_params_unpruned = sum(p.numel() for p in model.parameters())
+    num_params_pruned = sum(p.nonzero().size(0) for p in model.parameters())  # Count non-zero parameters
 
     with torch.no_grad():
         for data, target in test_loader:
@@ -67,14 +72,25 @@ def test_epoch(model, device, test_loader, epoch, log_to_wandb=True):
     test_loss /= len(test_loader.dataset)
     accuracy = 100. * correct / len(test_loader.dataset)
 
-    print(f'Test set: Average loss: {test_loss:.4f}, '
-          f'Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.0f}%)')
+    # print(f'Test set: Average loss: {test_loss:.4f}, '
+    #       f'Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.0f}%)')
+
+    # Call the plotting function with current test accuracy and parameter counts
+    if plot_acc:
+        plot_accuracy_vs_parameters(
+            accuracies=[accuracy],  # Current accuracy
+            num_params_pruned=[num_params_pruned],  # Current number of non-zero parameters
+            num_params_unpruned=num_params_unpruned,  # Total possible parameters
+            min_accuracy=80  # Minimum accuracy threshold for plotting
+        )
 
     if log_to_wandb:
         wandb.log({
             "test_loss": test_loss,
             "test_accuracy": accuracy,
-            "epoch": epoch
+            "epoch": epoch,
+            "num_parameters": num_params_pruned,
+            "parameters_kept_pct": 100 * num_params_pruned / num_params_unpruned
         })
 
     return accuracy, test_loss

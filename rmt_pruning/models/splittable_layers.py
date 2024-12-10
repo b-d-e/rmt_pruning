@@ -108,7 +108,7 @@ class SplittableLinear(nn.Module):
         matrix2 = self.layer2.weight.cpu().detach().numpy()
         return matrix2 @ matrix
 
-    def fit_mp(self, U, singular_values, V, save_name, show=False):
+    def fit_mp(self, U, singular_values, V, save_name, show):
         eigenvals = singular_values**2 / V.shape[0]
         eigenvals = np.sort(eigenvals)
 
@@ -130,10 +130,10 @@ class SplittableLinear(nn.Module):
 
         return np.sqrt(n * lambda_plus), good_fit
 
-    def split(self, ratio, save_name):
+    def split(self, ratio, save_name, show=False):
         matrix = self.get_matrix()
         U, S, V = np.linalg.svd(matrix)
-        Splus, good_fit = self.fit_mp(U, S, V, save_name)
+        Splus, good_fit = self.fit_mp(U, S, V, save_name, show=show)
 
         if not good_fit:
             return f" {self.name} no good fit"
