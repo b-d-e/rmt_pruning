@@ -1,96 +1,98 @@
-import torch
-import torch.nn.functional as F
-import wandb
-from .visualisation import plot_accuracy_vs_parameters
+# deprecated since migrating to PyTorch Lightning
 
-def train_epoch(model, device, train_loader, optimizer, epoch, config, log_to_wandb=True):
-    model.train()
-    # model.to(device)
+# import torch
+# import torch.nn.functional as F
+# import wandb
+# from .visualisation import plot_accuracy_vs_parameters
 
-    l1_lambda = 0.000005
-    l2_lambda = 0.000005
+# def train_epoch(model, device, train_loader, optimizer, epoch, config, log_to_wandb=True):
+#     model.train()
+#     # model.to(device)
 
-    correct = 0
-    total_loss = 0
+#     l1_lambda = 0.000005
+#     l2_lambda = 0.000005
 
-    for batch_idx, (data, target) in enumerate(train_loader):
-        # data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
+#     correct = 0
+#     total_loss = 0
 
-        output = model(data)
-        loss = F.nll_loss(output, target)
+#     for batch_idx, (data, target) in enumerate(train_loader):
+#         # data, target = data.to(device), target.to(device)
+#         optimizer.zero_grad()
 
-        # Regularization
-        l1_norm = sum(p.abs().sum() for p in model.parameters())
-        l2_norm = sum((p ** 2).sum() for p in model.parameters())
-        loss += l1_lambda * l1_norm + l2_lambda * l2_norm
+#         output = model(data)
+#         loss = F.nll_loss(output, target)
 
-        total_loss += loss.item()
+#         # Regularization
+#         l1_norm = sum(p.abs().sum() for p in model.parameters())
+#         l2_norm = sum((p ** 2).sum() for p in model.parameters())
+#         loss += l1_lambda * l1_norm + l2_lambda * l2_norm
 
-        pred = output.argmax(dim=1, keepdim=True)
-        correct += pred.eq(target.view_as(pred)).sum().item()
+#         total_loss += loss.item()
 
-        loss.backward()
-        optimizer.step()
+#         pred = output.argmax(dim=1, keepdim=True)
+#         correct += pred.eq(target.view_as(pred)).sum().item()
 
-        if (batch_idx + 1) % config['log_interval'] == 0 and config.get('show_training_loss', False):
-            print(f'Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} '
-                  f'({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}')
+#         loss.backward()
+#         optimizer.step()
 
-    avg_loss = total_loss / len(train_loader)
-    accuracy = 100. * correct / len(train_loader.dataset)
+#         if (batch_idx + 1) % config['log_interval'] == 0 and config.get('show_training_loss', False):
+#             print(f'Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} '
+#                   f'({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}')
 
-    print(f'Train set: Average loss: {avg_loss:.4f}, '
-          f'Accuracy: {correct}/{len(train_loader.dataset)} ({accuracy:.0f}%)')
+#     avg_loss = total_loss / len(train_loader)
+#     accuracy = 100. * correct / len(train_loader.dataset)
 
-    if log_to_wandb:
-        wandb.log({
-            "train_loss": avg_loss,
-            "train_accuracy": accuracy,
-            "epoch": epoch
-        })
+#     print(f'Train set: Average loss: {avg_loss:.4f}, '
+#           f'Accuracy: {correct}/{len(train_loader.dataset)} ({accuracy:.0f}%)')
 
-    return accuracy, avg_loss
+#     if log_to_wandb:
+#         wandb.log({
+#             "train_loss": avg_loss,
+#             "train_accuracy": accuracy,
+#             "epoch": epoch
+#         })
 
-def test_epoch(model, device, test_loader, epoch, log_to_wandb=True, plot_acc=True): # need to pass plot_acc from config
-    model.eval()
-    test_loss = 0
-    correct = 0
+#     return accuracy, avg_loss
 
-    # Count parameters
-    num_params_unpruned = sum(p.numel() for p in model.parameters())
-    num_params_pruned = sum(p.nonzero().size(0) for p in model.parameters())  # Count non-zero parameters
+# def test_epoch(model, device, test_loader, epoch, log_to_wandb=True, plot_acc=True): # need to pass plot_acc from config
+#     model.eval()
+#     test_loss = 0
+#     correct = 0
 
-    with torch.no_grad():
-        for data, target in test_loader:
-            # data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item()
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
+#     # Count parameters
+#     num_params_unpruned = sum(p.numel() for p in model.parameters())
+#     num_params_pruned = sum(p.nonzero().size(0) for p in model.parameters())  # Count non-zero parameters
 
-    test_loss /= len(test_loader.dataset)
-    accuracy = 100. * correct / len(test_loader.dataset)
+#     with torch.no_grad():
+#         for data, target in test_loader:
+#             # data, target = data.to(device), target.to(device)
+#             output = model(data)
+#             test_loss += F.nll_loss(output, target, reduction='sum').item()
+#             pred = output.argmax(dim=1, keepdim=True)
+#             correct += pred.eq(target.view_as(pred)).sum().item()
 
-    # print(f'Test set: Average loss: {test_loss:.4f}, '
-    #       f'Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.0f}%)')
+#     test_loss /= len(test_loader.dataset)
+#     accuracy = 100. * correct / len(test_loader.dataset)
 
-    # Call the plotting function with current test accuracy and parameter counts
-    if plot_acc:
-        plot_accuracy_vs_parameters(
-            accuracies=[accuracy],  # Current accuracy
-            num_params_pruned=[num_params_pruned],  # Current number of non-zero parameters
-            num_params_unpruned=num_params_unpruned,  # Total possible parameters
-            min_accuracy=80  # Minimum accuracy threshold for plotting
-        )
+#     # print(f'Test set: Average loss: {test_loss:.4f}, '
+#     #       f'Accuracy: {correct}/{len(test_loader.dataset)} ({accuracy:.0f}%)')
 
-    if log_to_wandb:
-        wandb.log({
-            "test_loss": test_loss,
-            "test_accuracy": accuracy,
-            "epoch": epoch,
-            "num_parameters": num_params_pruned,
-            "parameters_kept_pct": 100 * num_params_pruned / num_params_unpruned
-        })
+#     # Call the plotting function with current test accuracy and parameter counts
+#     if plot_acc:
+#         plot_accuracy_vs_parameters(
+#             accuracies=[accuracy],  # Current accuracy
+#             num_params_pruned=[num_params_pruned],  # Current number of non-zero parameters
+#             num_params_unpruned=num_params_unpruned,  # Total possible parameters
+#             min_accuracy=80  # Minimum accuracy threshold for plotting
+#         )
 
-    return accuracy, test_loss
+#     if log_to_wandb:
+#         wandb.log({
+#             "test_loss": test_loss,
+#             "test_accuracy": accuracy,
+#             "epoch": epoch,
+#             "num_parameters": num_params_pruned,
+#             "parameters_kept_pct": 100 * num_params_pruned / num_params_unpruned
+#         })
+
+#     return accuracy, test_loss

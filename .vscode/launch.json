@@ -2,6 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Train for two epochs",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/train.py",
+            "python": ".venv/bin/python",
+            "args": [
+                "fit",
+                "--config",
+                "config/twoepochs.yaml"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python: Train with default config",
             "type": "debugpy",
             "request": "launch",

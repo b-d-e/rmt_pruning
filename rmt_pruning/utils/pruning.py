@@ -7,7 +7,9 @@ from TracyWidom import TracyWidom
 import matplotlib.pyplot as plt
 
 def bema_scheduler(epoch):
-    return max(0, -1/300*epoch + 1)
+    # return max(0, -1/300*epoch + 1)
+    # more aggressive
+    return max(0, -1/100*epoch + 1)
 
 def mp_density(ndf, pdim, var=1):
     gamma = ndf/pdim
@@ -17,6 +19,7 @@ def mp_density(ndf, pdim, var=1):
     return a, b
 
 def dmp(x, ndf, pdim, var=1, log=False):
+    # compute theoretical MP density
     gamma = ndf/pdim
     a, b = mp_density(ndf, pdim, var)
 
@@ -104,27 +107,30 @@ def mp_cdf_inner(gamma, sigma_sq, x):
     return F
 
 def bema_inside(pdim, ndf, eigs, alpha, beta):
-    """Core BEMA algorithm implementation"""
-    pTilde = min(pdim, ndf)
-    gamma = pdim/ndf
-    ev = np.sort(eigs)
-    ind = list(range(int(alpha*pTilde), int((1-alpha)*pTilde)))
+    """Core BEMA (Bulk Eigenvalue Matching Analysis) algorithm implementation"""
+    pTilde = min(pdim, ndf) # effective dimension
+    gamma = pdim/ndf # aspect ratio
+    ev = np.sort(eigs) # sorted lambdas
+    ind = list(range(int(alpha*pTilde), int((1-alpha)*pTilde))) # exclude percentage from each end of dist - possible MP outliers
 
     # Compute q values and corresponding eigenvalues
-    q = [dmp(i/pTilde, ndf, pdim, 1) for i in ind]
-    lamda = [ev[i] for i in ind]
+    q = [dmp(i/pTilde, ndf, pdim, 1) for i in ind] # expected density at each point
+    lamda = [ev[i] for i in ind] # actual eigenvalues at each point
 
     # Compute sigma squared
     num = np.dot(q, lamda)
     denum = np.dot(q, q)
-    sigma_sq = num/denum
+    sigma_sq = num/denum # weight average of eigenvalues with expected density
 
     # Compute lambda plus using Tracy-Widom distribution
-    tw1 = TracyWidom(beta=1)
-    t_b = tw1.cdfinv(1-beta)
+    tw1 = TracyWidom(beta=1) # describes the fluctuations of the largest eigenvalue of a random matrix
+    t_b = tw1.cdfinv(1-beta) # confidence level β
+
+    # find λ+ which combines MP theoretical edge, TW finite size correction, and estimated scale of noise
+    # this should be threshold between noisy MP bulk and signal
     lamda_plus = sigma_sq*(((1+np.sqrt(gamma))**2 +
                            t_b*ndf**(-2/3)*(gamma)**(-1/6)*(1+np.sqrt(gamma))**4/3))
-    l2 = sigma_sq* (1+np.sqrt(gamma))**2
+    l2 = sigma_sq* (1+np.sqrt(gamma))**2 # theoretical MP edge, without TW correction
 
     return sigma_sq, lamda_plus, l2
 

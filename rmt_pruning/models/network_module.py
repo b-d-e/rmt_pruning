@@ -6,6 +6,7 @@ import wandb
 
 from .network_model import NetworkModel
 from ..utils.pruning import compute_eigs_to_keep, bema_scheduler
+from ..utils.visualisation import plot_accuracy_vs_parameters
 
 class NetworkModule(pl.LightningModule):
     def __init__(
@@ -90,6 +91,14 @@ class NetworkModule(pl.LightningModule):
         self.log('val_acc', acc)
 
         # print(f'Validation loss: {loss}, Validation accuracy: {acc}')
+
+        # if True:
+        #     # plot acc vs params
+        #     num_params_pruned = self.model.get_parameter_count()
+        #     num_params_unpruned = self.initial_param_count
+        #     fig = plot_accuracy_vs_parameters(acc, num_params_pruned, num_params_unpruned)
+        #     wandb.log({"accuracy_vs_parameters": fig})
+
 
         return loss
 

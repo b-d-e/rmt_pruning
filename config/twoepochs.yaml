@@ -16,7 +16,7 @@ model:
     momentum: 0.9
     alpha: 0.25
     beta: 0.9
-    goodness_of_fit_cutoff: [3]
+    goodness_of_fit_cutoff: [1]
     l1_lambda: 0.000005
     l2_lambda: 0.000005
     split_frequency: 1
@@ -24,7 +24,7 @@ model:
     show_eignspectra: true
 
 trainer:
-  max_epochs: 1000
+  max_epochs: 2
   accelerator: "auto"
   devices: [2]
   deterministic: true

@@ -15,5 +15,6 @@ setup(
         "tracywidom>=0.1.0",
         "jsonargparse[signatures]>=4.27.7",
         "plotly>=5.24.1",
+        "questionary>=2.0.1",
     ],
 )
