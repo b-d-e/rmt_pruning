@@ -1,4 +1,5 @@
 from pytorch_lightning.cli import LightningCLI
+import torch
 import os
 import sys
 import yaml
@@ -62,5 +63,5 @@ def cli_main():
     cli = LightningCLI(save_config_callback=None)
 
 if __name__ == "__main__":
-
+    torch.set_float32_matmul_precision('high')
     cli_main()

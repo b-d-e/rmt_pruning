@@ -6,7 +6,6 @@ import wandb
 
 from .network_model import NetworkModel
 from ..utils.pruning import compute_eigs_to_keep, bema_scheduler
-from ..utils.visualisation import plot_accuracy_vs_parameters
 
 class NetworkModule(pl.LightningModule):
     def __init__(
