@@ -1,0 +1,53 @@
+seed_everything: 42
+
+data:
+  class_path: rmt_pruning.data.datamodule.FashionMNISTDataModule
+  init_args:
+    data_dir: "data"
+    batch_size: 512
+    num_workers: 4
+
+model:
+  class_path: rmt_pruning.models.network_module.NetworkModule
+  init_args:
+    dims: [784, 3000, 3000, 3000, 10]
+    use_relu: [false, false, false, true, true]
+    learning_rate: 0.02
+    momentum: 0.9
+    alpha: 0.25
+    beta: 0.9
+    goodness_of_fit_cutoff: [1]
+    l1_lambda: 0.000005
+    l2_lambda: 0.000005
+    split_frequency: 1
+    pruning_enabled: true
+    show_eignspectra: true
+
+trainer:
+  max_epochs: 1000
+  accelerator: "auto"
+  devices: [2]
+  deterministic: true
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+      init_args:
+        save_top_k: 3
+        monitor: "val_loss"
+        mode: "min"
+        filename: "epoch_{epoch:03d}-val_loss_{val_loss:.4f}"
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: "epoch"
+    # - class_path: pytorch_lightning.callbacks.EarlyStopping
+    #   init_args:
+    #     # monitor: "val_loss"
+    #     monitor: "val_acc"
+    #     patience: 10
+    #     mode: "max"
+
+  logger:
+    class_path: pytorch_lightning.loggers.WandbLogger
+    init_args:
+      project: "rmt_pruning"
+      log_model: true
+      save_dir: "logs"

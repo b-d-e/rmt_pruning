@@ -7,9 +7,9 @@ from TracyWidom import TracyWidom
 import matplotlib.pyplot as plt
 
 def bema_scheduler(epoch):
-    # return max(0, -1/300*epoch + 1)
+    return max(0, -1/300*epoch + 1)
     # more aggressive
-    return max(0, -1/100*epoch + 1)
+    # return max(0, -1/100*epoch + 1)
 
 def mp_density(ndf, pdim, var=1):
     gamma = ndf/pdim

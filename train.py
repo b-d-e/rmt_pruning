@@ -6,6 +6,10 @@ import yaml
 from pathlib import Path
 from typing import Optional
 import questionary
+from pathlib import Path
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+
 
 def get_config_files() -> list[Path]:
     """Get all YAML config files from the config directory."""
@@ -55,9 +59,16 @@ def cli_main():
             sys.argv.extend(["--config", config_path])
 
     if "--trainer.logger.init_args.name" not in sys.argv:
-        name = input("Enter wandb name (or press ENTER to use default random name): ")
-        if len(name) > 0:
-            sys.argv.extend(["--trainer.logger.init_args.name", name])
+        default_suggestion = Path(config_path).stem if config_path else ""
+
+        try:
+            completer = WordCompleter([default_suggestion]) if default_suggestion else None
+            name = prompt("Enter wandb name (TAB for config name, ENTER for default random name): ",
+                        completer=completer)
+            if len(name) > 0:
+                sys.argv.extend(["--trainer.logger.init_args.name", name])
+        except (EOFError, KeyboardInterrupt):
+            pass
 
 
     cli = LightningCLI(save_config_callback=None)
